@@ -72,7 +72,13 @@ export default function InventoryDashboard() {
   }
 
   // initial load
-  useEffect(() => { load('', 1, perPage); /* eslint-disable-line */ }, []);
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [sidebarOpen]);
+
 
   async function loadVariations(productId: number) {
     setExpanded(prev => ({ ...prev, [productId]: 'loading' }));
@@ -139,9 +145,9 @@ export default function InventoryDashboard() {
         const price = parseFloat(p.regular_price || p.price || '0') || 0;
         sum += qty * price;
       } else {
-        const list = rows ?? [];
-        if (Array.isArray(list)) {
-          for (const v of list) {
+        const state = expanded[p.id];
+        if (Array.isArray(state)) {
+          for (const v of state) {
             const qty = v.stock_quantity ?? 0;
             const price = parseFloat(v.regular_price || '0') || 0;
             sum += qty * price;
@@ -248,22 +254,20 @@ export default function InventoryDashboard() {
     <div className="min-h-dvh bg-slate-50 text-slate-900 flex">
       {/* Sidebar (overlay on mobile, pinned on md+) */}
       <aside
-        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-            md:translate-x-0 fixed md:fixed inset-y-0 left-0 w-64 z-40 
-            bg-slate-900 text-white transition-transform`}
+        className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                  md:translate-x-0 fixed inset-y-0 left-0 w-64 z-50
+                bg-slate-900 text-white transition-transform`}
       >
         <div className="h-screen flex flex-col overflow-hidden">
           <div className="p-4 text-lg font-semibold">B+V Studio Admin</div>
-
           <nav className="px-3 flex-1 overflow-y-auto">
+            {/* menu items */}
             <a className="block rounded px-3 py-2 bg-white/10 mb-1">Inventory</a>
             <a className="block rounded px-3 py-2 hover:bg-white/10 mb-1">Orders (future)</a>
             <a className="block rounded px-3 py-2 hover:bg-white/10 mb-1">Suppliers (future)</a>
             <a className="block rounded px-3 py-2 hover:bg-white/10 mb-1">Reports (future)</a>
             <a className="block rounded px-3 py-2 hover:bg-white/10">Settings (future)</a>
           </nav>
-
-          {/* Footer pinned, always visible */}
           <div className="p-4 border-t border-white/10">
             <button onClick={logout} className="w-full rounded px-3 py-2 bg-white/10 hover:bg-white/20">Logout</button>
           </div>
@@ -282,7 +286,7 @@ export default function InventoryDashboard() {
       {/* Main */}
       <main className="flex-1 min-w-0 md:ml-64">
         {/* Sticky header (title + menu only) */}
-        <header className="sticky top-0 z-30 bg-slate-900 text-white">
+        <header className="sticky top-0 z-30 bg-slate-900 text-white min-h-[56px]">
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex items-center gap-3">
               <button className="md:hidden rounded bg-white/10 px-3 py-2" onClick={() => setSidebarOpen(s => !s)}>Menu</button>
