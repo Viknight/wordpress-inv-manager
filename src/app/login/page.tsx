@@ -9,6 +9,8 @@ function LoginInner() {
   const sp = useSearchParams();
   const next = sp.get('next') || '/';
 
+  type ErrorResponse = { error?: string };
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr('');
@@ -18,7 +20,7 @@ function LoginInner() {
       body: JSON.stringify({ password }),
     });
     if (!res.ok) {
-      const j = await res.json().catch(() => ({} as any));
+      const j: ErrorResponse = await res.json().catch(() => ({} as ErrorResponse));
       setErr(j.error || 'Login failed');
       return;
     }
